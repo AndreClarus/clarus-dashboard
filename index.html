@@ -337,17 +337,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--muted);border-top:1px solid 
     <div class="period-toolbar">
       <span class="ptlabel">Período</span>
       <div class="pill-group" id="periodoPillsEnc">
-        <button class="pill" data-val="1">Último mês</button>
+        <button class="pill active" data-val="1">Último mês</button>
         <button class="pill" data-val="3">3 meses</button>
-        <button class="pill active" data-val="6">Semestre</button>
+        <button class="pill" data-val="6">Semestre</button>
         <button class="pill" data-val="12">Ano</button>
         <button class="pill" data-val="all">Histórico</button>
         <button class="pill" data-val="custom">Personalizado</button>
       </div>
       <select id="periodoSelEnc" style="display:none;">
-        <option value="1">Último mês</option>
+        <option value="1" selected>Último mês</option>
         <option value="3">Últimos 3 meses</option>
-        <option value="6" selected>Último semestre</option>
+        <option value="6">Último semestre</option>
         <option value="12">Último ano</option>
         <option value="all">Todo histórico</option>
         <option value="custom">Personalizado</option>
@@ -385,19 +385,19 @@ footer{margin-top:22px;font-size:11.5px;color:var(--muted);border-top:1px solid 
     <div class="period-toolbar">
       <span class="ptlabel">Período</span>
       <div class="pill-group" id="periodoPillsInd">
-        <button class="pill" data-val="1">Último mês</button>
+        <button class="pill active" data-val="1">Último mês</button>
         <button class="pill" data-val="3">3 meses</button>
         <button class="pill" data-val="6">Semestre</button>
         <button class="pill" data-val="12">Ano</button>
-        <button class="pill active" data-val="all">Histórico</button>
+        <button class="pill" data-val="all">Histórico</button>
         <button class="pill" data-val="custom">Personalizado</button>
       </div>
       <select id="periodoSelInd" style="display:none;">
-        <option value="1">Último mês</option>
+        <option value="1" selected>Último mês</option>
         <option value="3">Últimos 3 meses</option>
         <option value="6">Último semestre</option>
         <option value="12">Último ano</option>
-        <option value="all" selected>Todo histórico</option>
+        <option value="all">Todo histórico</option>
         <option value="custom">Personalizado</option>
       </select>
       <span id="customBoxInd" style="display:none;">
