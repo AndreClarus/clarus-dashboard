@@ -73,7 +73,6 @@ select, input[type=month], input[type=text]{border:1px solid var(--border);borde
 .kpi-hero .value{font-size:52px;font-weight:800;background:linear-gradient(90deg,var(--blue),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1;}
 .scroll-table{max-height:560px;overflow-y:auto;}
 .card .note{font-size:11.5px;color:var(--muted);margin-top:10px;}
-.result-count{display:inline-flex;align-items:center;font-size:15px;font-weight:800;color:var(--blue-dark);background:#eff6ff;border:1.5px solid #bfdbfe;padding:9px 18px;border-radius:10px;margin-top:12px;}
 .chart-box{position:relative;height:270px;}
 .chart-box.tall{height:340px;}
 .full{grid-column:1/-1;}
@@ -94,12 +93,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--muted);border-top:1px solid 
 .gridjs-sort{opacity:0.55;}
 .gridjs-wrapper{border-radius:10px !important;}
 .gridjs-td{vertical-align:middle !important;}
-.gridjs-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:12px;color:var(--muted);}
-.gridjs-pagination .gridjs-summary{font-size:12px;color:var(--muted);}
-.gridjs-pagination .gridjs-pages button{background:#fff;border:1.5px solid var(--border);color:var(--text);font-size:12px;font-weight:700;padding:6px 11px;border-radius:7px;margin-left:4px;cursor:pointer;}
-.gridjs-pagination .gridjs-pages button:hover:not(:disabled){border-color:var(--orange);color:var(--orange);}
-.gridjs-pagination .gridjs-pages button:disabled{opacity:0.4;cursor:default;}
-.gridjs-pagination .gridjs-pages button.gridjs-currentPage{background:var(--orange);border-color:var(--orange);color:#fff;}
 .linkbtn{background:none;border:none;color:var(--blue);font-size:12.5px;cursor:pointer;padding:0;text-decoration:underline;}
 @media (max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr);} .grid2{grid-template-columns:1fr;}}
 
@@ -335,7 +328,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--muted);border-top:1px solid 
         </label>
       </div>
       <div id="tabelaAberto" class="scroll-table"></div>
-      <div class="result-count" id="countAberto"></div>
       <div class="note">Coluna "Responsável/Observação" vem da coluna sem título da planilha "Em aberto" (em branco, é preenchida como "Clarus"); datas de agendamento foram desconsideradas, a pedido do André. "Dias em aberto" (usado na ordenação) é calculado a partir de hoje.</div>
     </div>
   </div>
@@ -384,7 +376,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--muted);border-top:1px solid 
         </label>
       </div>
       <div id="tabelaEncerrados" class="scroll-table"></div>
-      <div class="result-count" id="countEncerrados"></div>
       <div class="note">Cada ocorrência corresponde a uma linha da aba mensal de "Resumo pós obra.xlsx" — o mês indica quando foi registrada/solucionada, não a data de abertura (a planilha histórica não registra data de abertura por chamado).</div>
     </div>
   </div>
@@ -798,40 +789,6 @@ window.addEventListener('resize', ()=> requestAnimationFrame(()=> {
 let lastAbertoRows = [], lastEncerradosRows = [], lastCategoriaRows = [], lastEmpreendimentoRows = [], lastReincidenciaRows = [];
 let lastAbertoStats = {}, lastEncerradosStats = {};
 
-// ---------- contador de resultados (reage à busca "Type a keyword" e aos filtros) ----------
-// Calculado a partir dos dados já filtrados (não conta linhas do DOM), para funcionar
-// corretamente mesmo quando a tabela usa paginação interna (tabelas muito grandes, ex. "Histórico").
-const ICON_RESULT_COUNT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="vertical-align:-2.5px;margin-right:7px;flex-shrink:0;"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
-function computeMatchCount(rows, keyword){
-  const kw = (keyword||'').trim().toLowerCase();
-  if(!kw) return rows.length;
-  return rows.filter(row => row.some(cell => String(cell==null?'':cell).toLowerCase().includes(kw))).length;
-}
-// idioma pt-BR para a paginação do Grid.js (só aparece quando a tabela é muito grande)
-const GRIDJS_LANG_PAGINATION = {
-  pagination: {previous:'Anterior', next:'Próxima', showing:'Mostrando', to:'a', of:'de', results:'resultados'}
-};
-function bindSearchCounter(containerId, counterId, getRows, singular, plural){
-  const container = document.getElementById(containerId);
-  const el = document.getElementById(counterId);
-  if(!container || !el) return;
-  function refresh(){
-    const input = container.querySelector('.gridjs-search-input');
-    const count = computeMatchCount(getRows(), input ? input.value : '');
-    el.innerHTML = ICON_RESULT_COUNT + count.toLocaleString('pt-BR') + ' ' + (count === 1 ? singular : plural);
-  }
-  const obs = new MutationObserver(()=>{
-    const input = container.querySelector('.gridjs-search-input');
-    if(input && !input.dataset.counterBound){
-      input.dataset.counterBound = '1';
-      input.addEventListener('input', refresh);
-    }
-    refresh();
-  });
-  obs.observe(container, {childList:true, subtree:true});
-  refresh();
-}
-
 // ---------- ordenação de empreendimentos pela ordem de entrega (extraída da planilha) ----------
 function sortByObraOrdem(list){
   const ordem = DATA.obras_ordem_entrega || [];
@@ -1017,7 +974,6 @@ function renderAberto(){
 document.getElementById('filtroObra').addEventListener('change', renderAberto);
 document.getElementById('filtroCategoria').addEventListener('change', renderAberto);
 renderAberto();
-bindSearchCounter('tabelaAberto', 'countAberto', ()=> lastAbertoRows, 'chamado encontrado', 'chamados encontrados');
 
 // ---------- PÁGINA 3: Chamados Encerrados ----------
 const obraOptionsEnc = sortByObraOrdem(Array.from(new Set(hist.map(h=>h.obra).filter(Boolean)))).filter(o=> (DATA.obras_ordem_entrega||[]).includes(o) && o!=='Imóveis terceiro');
@@ -1054,11 +1010,6 @@ function renderEncerrados(){
   ]);
   lastEncerradosRows = tableRows;
 
-  // Acima de ~500 linhas (tipicamente só em "Histórico"), a lista inteira sem paginação
-  // trava o navegador ao montar a tabela — nesse caso raro, liga paginação leve (300/página).
-  // Nos demais períodos (poucas linhas), continua rolando livremente, sem páginas.
-  const paginationEnc = tableRows.length > 500 ? {limit: 300, summary: true} : false;
-
   if(!gridEncerrados){
     gridEncerrados = new gridjs.Grid({
       columns:[
@@ -1068,12 +1019,11 @@ function renderEncerrados(){
         {name:'Responsável', formatter:(cell)=> gridjs.html(respHtml(cell))}
       ],
       data: tableRows,
-      search:true, sort:true, pagination: paginationEnc,
-      language: GRIDJS_LANG_PAGINATION,
+      search:true, sort:true, pagination:false,
       style:{table:{'font-size':'12.5px'}}
     }).render(document.getElementById('tabelaEncerrados'));
   } else {
-    gridEncerrados.updateConfig({data: tableRows, pagination: paginationEnc}).forceRender();
+    gridEncerrados.updateConfig({data: tableRows}).forceRender();
   }
 }
 document.querySelectorAll('#periodoPillsEnc .pill').forEach(btn=>{
@@ -1089,7 +1039,6 @@ document.getElementById('customStartEnc').addEventListener('change', renderEncer
 document.getElementById('customEndEnc').addEventListener('change', renderEncerrados);
 document.getElementById('filtroObraEnc').addEventListener('change', renderEncerrados);
 renderEncerrados();
-bindSearchCounter('tabelaEncerrados', 'countEncerrados', ()=> lastEncerradosRows, 'chamado encontrado', 'chamados encontrados');
 
 // ---------- PÁGINA 4: Indicadores ----------
 function unidadeKey(obra, apto){ return (obra||'?') + ' - ' + (apto!=null? String(apto): '?'); }
@@ -1184,16 +1133,13 @@ function renderIndicadores(){
     {name:'Empreendimento', formatter:(cell)=> gridjs.html(obraBadgeHtml(cell))},
     'Apto','Total de chamados','Abertos agora','Categoria mais frequente'
   ];
-  // mesma proteção contra travamento usada em Chamados Encerrados (ver comentário lá)
-  const paginationReinc = reincidenciaRows.length > 500 ? {limit: 300, summary: true} : false;
   if(!gridReincidencia){
     gridReincidencia = new gridjs.Grid({
       columns: colsReincidencia, data: reincidenciaRows,
-      search:true, sort:true, pagination: paginationReinc,
-      language: GRIDJS_LANG_PAGINATION,
+      search:true, sort:true, pagination:false,
       style:{table:{'font-size':'12.5px'}}
     }).render(document.getElementById('tabelaReincidencia'));
-  } else { gridReincidencia.updateConfig({data: reincidenciaRows, pagination: paginationReinc}).forceRender(); }
+  } else { gridReincidencia.updateConfig({data: reincidenciaRows}).forceRender(); }
 
   // Ranking por categoria
   const catMap = {};
